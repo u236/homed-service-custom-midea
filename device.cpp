@@ -306,7 +306,7 @@ void Device::readyRead(void)
                 properties.insert("heaterTemperature", static_cast <quint8> (payload.at(14)));
                 properties.insert("heaterTargetTemperature", static_cast <quint8> (payload.at(17)));
 
-                properties.insert("pressure", static_cast <quint8> (payload.at(24)) / 10.0); // not shure
+                properties.insert("pressure", static_cast <quint8> (payload.at(27)) / 10.0); // not shure
                 properties.insert("errorCode", static_cast <quint8> (payload.at(6))); // not equals error codes on display
 
 //                for (int i = 3; i < 28; i++)
