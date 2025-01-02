@@ -3,7 +3,7 @@
 #include "controller.h"
 #include "logger.h"
 
-Controller::Controller(const QString &configFile) : HOMEd(configFile), m_device(new Device(getConfig(), this))
+Controller::Controller(const QString &configFile) : HOMEd(configFile, false, false), m_device(new Device(getConfig(), this))
 {
     logInfo << "Starting version" << SERVICE_VERSION;
     logInfo << "Configuration file is" << getConfig()->fileName();
@@ -12,6 +12,9 @@ Controller::Controller(const QString &configFile) : HOMEd(configFile), m_device(
 
     connect(m_device, &Device::availabilityUpdated, this, &Controller::availabilityUpdated);
     connect(m_device, &Device::propertiesUpdated, this, &Controller::propertiesUpdated);
+
+    mqttSetWillTopic(mqttTopic("device/custom/%1").arg(m_topic));
+    mqttConnect();
 
     m_device->init();
 }
