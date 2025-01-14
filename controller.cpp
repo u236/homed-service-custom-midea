@@ -26,19 +26,58 @@ void Controller::quit(void)
 
 void Controller::mqttConnected(void)
 {
+    mqttSubscribe(mqttTopic("service/custom"));
     mqttSubscribe(mqttTopic("td/custom/%1").arg(m_topic));
     mqttPublishStatus();
 }
 
 void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &topic)
 {
+    QString subTopic = topic.name().replace(mqttTopic(), QString());
     QJsonObject json = QJsonDocument::fromJson(message).object();
 
-    if (topic.name() != mqttTopic("td/custom/%1").arg(m_topic))
-        return;
+    if (subTopic == "service/custom")
+    {
+        if (json.value("status").toString() != "online")
+            return;
 
-    for (auto it = json.begin(); it != json.end(); it++)
-        m_device->action(it.key(), it.value().toVariant());
+        mqttSubscribe(mqttTopic("status/custom"));
+    }
+    else if (subTopic == "status/custom")
+    {
+        QJsonArray devices = json.value("devices").toArray();
+        QJsonObject options, data;
+
+        mqttUnsubscribe(mqttTopic("service/custom"));
+        mqttUnsubscribe(mqttTopic("status/custom"));
+
+        for (auto it = devices.begin(); it != devices.end(); it++)
+            if (it->toObject().value(json.value("names").toBool() ? "name" : "id") == m_topic)
+                return;
+
+        options.insert("heater", QJsonObject {{"type", "toggle"}});
+        options.insert("waterTemperature", QJsonObject {{"type", "sensor"}, {"unit", "°C"}});
+        options.insert("waterTargetTemperature", QJsonObject {{"type", "number"}, {"min", 35}, {"max", 60}, {"unit", "°C"}});
+        options.insert("heaterTemperature", QJsonObject {{"type", "sensor"}, {"unit", "°C"}});
+        options.insert("heaterTargetTemperature", QJsonObject {{"type", "number"}, {"min", 30}, {"max", 80}, {"unit", "°C"}});
+        options.insert("pressure", QJsonObject {{"type", "sensor"}, {"unit", "bar"}});
+
+        data.insert("name", m_topic);
+        data.insert("id", m_topic);
+        data.insert("real", true);
+        data.insert("active", true);
+        data.insert("cloud", false);
+        data.insert("discovery", false);
+        data.insert("exposes", QJsonArray {"switch", "heater", "flame", "mode", "waterTemperature", "waterTargetTemperature", "heaterTemperature", "heaterTargetTemperature", "pressure", "errorCode"});
+        data.insert("options", options);
+
+        mqttPublish(mqttTopic("command/custom"), QJsonObject {{"action", "updateDevice"}, {"data", data}});
+    }
+    else if (topic.name() == mqttTopic("td/custom/%1").arg(m_topic))
+    {
+        for (auto it = json.begin(); it != json.end(); it++)
+            m_device->action(it.key(), it.value().toVariant());
+    }
 }
 
 void Controller::availabilityUpdated(Availability availability)
