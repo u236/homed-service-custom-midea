@@ -51,7 +51,7 @@ Device::Device(QSettings *config, QObject *parent) : QObject(parent), m_receiveT
          connect(m_socket, &QTcpSocket::connected, this, &Device::socketConnected);
      }
 
-     m_actions = {"status", "heater", "heatTargetTemperature", "waterTargetTemperature"};
+     m_actions = {"status", "heater", "heaterTargetTemperature", "waterTargetTemperature"};
      m_debug = config->value("device/debug", false).toBool();
 
      connect(m_device, &QIODevice::readyRead, this, &Device::startTimer);
@@ -127,7 +127,7 @@ void Device::action(const QString &name, const QVariant &value)
             data[2] = value.toBool() ? 0x01 : 0x02;
             break;
 
-        case 2: // heatTargetTemperature
+        case 2: // heaterTargetTemperature
             data[0] = 0x04;
             data[1] = 0x13;
             data[2] = static_cast <quint8> (value.toInt());
@@ -197,6 +197,7 @@ void Device::sendFrame(quint8 type, const QByteArray &payload)
     m_device->write(data);
     m_device->waitForBytesWritten(1000);
 }
+
 void Device::serialError(QSerialPort::SerialPortError error)
 {
     if (error == QSerialPort::SerialPortError::NoError)
@@ -306,11 +307,8 @@ void Device::readyRead(void)
                 properties.insert("heaterTemperature", static_cast <quint8> (payload.at(14)));
                 properties.insert("heaterTargetTemperature", static_cast <quint8> (payload.at(17)));
 
-                properties.insert("pressure", static_cast <quint8> (payload.at(27)) / 10.0); // not shure
+                properties.insert("pressure", static_cast <quint8> (payload.at(27)) / 10.0);
                 properties.insert("errorCode", static_cast <quint8> (payload.at(6))); // not equals error codes on display
-
-//                for (int i = 3; i < 28; i++)
-//                    properties.insert(QString("x%1").arg(i), static_cast <quint8> (payload.at(i)));
 
                 if (m_properties != properties)
                 {
