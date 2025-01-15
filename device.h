@@ -16,6 +16,7 @@
 #define FRAME_NETWORK_QUERY         0x63
 
 #include <QHostAddress>
+#include <QJsonObject>
 #include <QSerialPort>
 #include <QSettings>
 #include <QTcpSocket>
@@ -48,10 +49,19 @@ public:
     Device(QSettings *config, QObject *parent);
     ~Device(void);
 
-    void init(void);
-    void action(const QString &name, const QVariant &data);
+    virtual void action(const QString &name, const QVariant &data) = 0;
 
-private:
+    inline QString name(void) { return m_name; }
+    inline QList <QString> exposes(void) { return m_exposes; }
+    inline QMap <QString, QVariant> options(void) { return m_options; }
+
+    void init(void);
+
+protected:
+
+    QByteArray m_buffer;
+    QString m_name;
+    bool m_debug;
 
     QTimer *m_receiveTimer, *m_resetTimer, *m_updateTimer;
 
@@ -65,15 +75,15 @@ private:
     quint16 m_port;
     bool m_connected;
 
-    QByteArray m_buffer;
-    bool m_debug;
-
     Availability m_availability;
     qint64 m_lastSeen;
     quint8 m_protocol;
 
-    QList <QString> m_actions;
-    QMap <QString, QVariant> m_properties;
+    QList <QString> m_actions, m_exposes;
+    QMap <QString, QVariant> m_options, m_properties;
+
+    virtual void parseFrame(quint8 type, const QByteArray &payload) = 0;
+    virtual void ping(void) = 0;
 
     quint8 checksum(const QByteArray &data);
     quint8 crc(const QByteArray &data);

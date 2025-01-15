@@ -17,7 +17,6 @@ public:
 private:
 
     Device *m_device;
-    QString m_topic;
 
 public slots:
 
