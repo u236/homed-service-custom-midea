@@ -1,0 +1,6 @@
+#!/bin/sh
+
+/etc/init.d/homed-custom-midea stop
+/etc/init.d/homed-custom-midea disable
+
+exit 0

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+systemctl stop homed-custom-midea.service
+systemctl disable homed-custom-midea.service
+
+exit 0

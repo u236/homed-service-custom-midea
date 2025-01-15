@@ -1,0 +1,16 @@
+{
+  "luci-app-homed-custom-midea":
+  {
+    "description": "Grant access to /etc/homed/homed-custom-midea.conf",
+    "read":
+    {
+      "file": {"/etc/homed/homed-custom-midea.conf": ["read"]},
+      "ubus": {"file": ["read"]}
+    },
+    "write":
+    {
+      "file": {"/etc/homed/homed-custom-midea.conf": ["write"]},
+      "ubus": {"file": ["write"]}
+    }
+  }
+}
