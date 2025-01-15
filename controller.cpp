@@ -2,10 +2,12 @@
 #include "controller.h"
 #include "logger.h"
 
-Controller::Controller(const QString &configFile) : HOMEd(configFile), m_device(new NobbyBalance(getConfig(), this))
+Controller::Controller(const QString &configFile) : HOMEd(configFile)
 {
     logInfo << "Starting version" << SERVICE_VERSION;
     logInfo << "Configuration file is" << getConfig()->fileName();
+
+    m_device = new NobbyBalance(getConfig()->value("device/port", "/dev/ttyUSB0").toString(), getConfig()->value("device/name", "nobby").toString(), getConfig()->value("device/debug", false).toBool(), this);
 
     connect(m_device, &Device::availabilityUpdated, this, &Controller::availabilityUpdated);
     connect(m_device, &Device::propertiesUpdated, this, &Controller::propertiesUpdated);

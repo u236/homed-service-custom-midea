@@ -22,15 +22,13 @@ static uint8_t const crcTable[256] =
     0x74, 0x2A, 0xC8, 0x96, 0x15, 0x4B, 0xA9, 0xF7, 0xB6, 0xE8, 0x0A, 0x54, 0xD7, 0x89, 0x6B, 0x35
 };
 
-Device::Device(QSettings *config, QObject *parent) : QObject(parent), m_receiveTimer(new QTimer(this)), m_resetTimer(new QTimer(this)), m_updateTimer(new QTimer(this)), m_serial(new QSerialPort(this)), m_socket(new QTcpSocket(this)), m_serialError(false), m_connected(false), m_availability(Availability::Unknown), m_protocol(0)
+Device::Device(const QString &port, const QString &name, bool debug, QObject *parent) : QObject(parent), m_name(name), m_debug(debug), m_receiveTimer(new QTimer(this)), m_resetTimer(new QTimer(this)), m_updateTimer(new QTimer(this)), m_serial(new QSerialPort(this)), m_socket(new QTcpSocket(this)), m_serialError(false), m_connected(false), m_availability(Availability::Unknown), m_protocol(0)
 {
-     QString portName = config->value("device/port", "/dev/ttyUSB0").toString();
-
-     if (!portName.startsWith("tcp://"))
+     if (!port.startsWith("tcp://"))
      {
          m_device = m_serial;
 
-         m_serial->setPortName(portName);
+         m_serial->setPortName(port);
          m_serial->setBaudRate(9600);
          m_serial->setDataBits(QSerialPort::Data8);
          m_serial->setParity(QSerialPort::NoParity);
@@ -40,7 +38,7 @@ Device::Device(QSettings *config, QObject *parent) : QObject(parent), m_receiveT
      }
      else
      {
-         QList <QString> list = portName.remove("tcp://").split(':');
+         QList <QString> list = QString(port).remove("tcp://").split(':');
 
          m_device = m_socket;
          m_adddress = QHostAddress(list.value(0));

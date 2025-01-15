@@ -1,10 +1,7 @@
 #include "nobby.h"
 
-NobbyBalance::NobbyBalance(QSettings *config, QObject *parent) : Device(config, parent)
+NobbyBalance::NobbyBalance(const QString &port, const QString &name, bool debug, QObject *parent) : Device(port, name, debug, parent)
 {
-    m_name = config->value("device/name", "nobby").toString();
-    m_debug = config->value("device/debug", false).toBool();
-
     m_actions = {"status", "heater", "heaterTargetTemperature", "waterTargetTemperature"};
     m_exposes = {"switch", "heater", "flame", "mode", "waterTemperature", "waterTargetTemperature", "heaterTemperature", "heaterTargetTemperature", "pressure", "errorCode"};
 

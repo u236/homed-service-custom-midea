@@ -8,7 +8,6 @@
 
 #define START_BYTE                  0xAA
 #define BUFFER_LENGTH_LIMIT         1024
-#define STATUS_PAYLOAD_LENGTH       37
 
 #define FRAME_SET                   0x02
 #define FRAME_GET                   0x03
@@ -46,7 +45,7 @@ class Device : public QObject
 
 public:
 
-    Device(QSettings *config, QObject *parent);
+    Device(const QString &portName, const QString &name, bool debug, QObject *parent);
     ~Device(void);
 
     virtual void action(const QString &name, const QVariant &data) = 0;
@@ -59,7 +58,6 @@ public:
 
 protected:
 
-    QByteArray m_buffer;
     QString m_name;
     bool m_debug;
 
@@ -74,6 +72,8 @@ protected:
     QHostAddress m_adddress;
     quint16 m_port;
     bool m_connected;
+
+    QByteArray m_buffer;
 
     Availability m_availability;
     qint64 m_lastSeen;
