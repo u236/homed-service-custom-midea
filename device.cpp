@@ -22,7 +22,7 @@ static uint8_t const crcTable[256] =
     0x74, 0x2A, 0xC8, 0x96, 0x15, 0x4B, 0xA9, 0xF7, 0xB6, 0xE8, 0x0A, 0x54, 0xD7, 0x89, 0x6B, 0x35
 };
 
-DeviceObject::DeviceObject(const QString &port, const QString &name, bool debug) : QObject(nullptr), m_name(name), m_debug(debug), m_receiveTimer(new QTimer(this)), m_resetTimer(new QTimer(this)), m_updateTimer(new QTimer(this)), m_serial(new QSerialPort(this)), m_socket(new QTcpSocket(this)), m_serialError(false), m_connected(false), m_availability(Availability::Unknown), m_protocol(0)
+DeviceObject::DeviceObject(quint8 appliance, const QString &port, const QString &name, bool debug) : QObject(nullptr), m_appliance(appliance), m_protocol(0), m_name(name), m_debug(debug), m_receiveTimer(new QTimer(this)), m_resetTimer(new QTimer(this)), m_updateTimer(new QTimer(this)), m_serial(new QSerialPort(this)), m_socket(new QTcpSocket(this)), m_serialError(false), m_connected(false), m_availability(Availability::Unknown)
 {
      if (!port.startsWith("tcp://"))
      {
@@ -131,7 +131,7 @@ void DeviceObject::sendFrame(quint8 type, const QByteArray &payload)
 
     header.startByte = START_BYTE;
     header.length = static_cast <quint8> (payload.length() + sizeof(header));
-    header.appliance = 0xE6;
+    header.appliance = m_appliance;
     header.protocol = m_protocol;
     header.type = type;
 

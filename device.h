@@ -49,7 +49,7 @@ class DeviceObject : public QObject
 
 public:
 
-    DeviceObject(const QString &port, const QString &name, bool debug);
+    DeviceObject(quint8 appliance, const QString &port, const QString &name, bool debug);
     ~DeviceObject(void);
 
     virtual void action(const QString &name, const QVariant &data) = 0;
@@ -61,6 +61,8 @@ public:
     void init(void);
 
 protected:
+
+    quint8 m_appliance, m_protocol;
 
     QString m_name;
     bool m_debug;
@@ -81,7 +83,6 @@ protected:
 
     Availability m_availability;
     qint64 m_lastSeen;
-    quint8 m_protocol;
 
     QJsonArray m_exposes;
     QJsonObject m_options;

@@ -1,8 +1,6 @@
 #ifndef NOBBY_H
 #define NOBBY_H
 
-#define STATUS_PAYLOAD_LENGTH   37
-
 #include "device.h"
 
 class NobbyBalance : public DeviceObject

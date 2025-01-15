@@ -1,6 +1,6 @@
 #include "nobby.h"
 
-NobbyBalance::NobbyBalance(const QString &port, const QString &name, bool debug) : DeviceObject(port, name, debug)
+NobbyBalance::NobbyBalance(const QString &port, const QString &name, bool debug) : DeviceObject(0xE6, port, name, debug)
 {
     m_exposes = {"switch", "heater", "flame", "mode", "waterTemperature", "waterTargetTemperature", "heaterTemperature", "heaterTargetTemperature", "pressure", "errorCode"};
 
@@ -72,7 +72,7 @@ void NobbyBalance::parseFrame(quint8 type, const QByteArray &payload)
         {
             QMap <QString, QVariant> properties;
 
-            if (payload.length() != STATUS_PAYLOAD_LENGTH)
+            if (payload.length() != 37)
                 return;
 
             properties.insert("status", payload.at(2) & 0x04 ? "on" : "off");
