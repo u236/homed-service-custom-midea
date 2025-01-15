@@ -4,26 +4,48 @@
 
 Controller::Controller(const QString &configFile) : HOMEd(configFile)
 {
+    QList <QString> names = getConfig()->childGroups(), types = {"nobbyBalance"};
     logInfo << "Starting version" << SERVICE_VERSION;
     logInfo << "Configuration file is" << getConfig()->fileName();
 
-    m_device = Device(new NobbyBalance(getConfig()->value("device/port", "/dev/ttyUSB0").toString(), getConfig()->value("device/name", "nobby").toString(), getConfig()->value("device/debug", false).toBool()));
+    for (int i = 0; i < names.count(); i++)
+    {
+        const QString &name = names.at(i);
 
-    connect(m_device.data(), &DeviceObject::availabilityUpdated, this, &Controller::availabilityUpdated);
-    connect(m_device.data(), &DeviceObject::propertiesUpdated, this, &Controller::propertiesUpdated);
+        if (name != "log" && name != "mqtt")
+        {
+            QString port = getConfig()->value(QString("%1/port").arg(name), "/dev/ttyUSB0").toString();
+            bool debug = getConfig()->value(QString("%1/debug").arg(name), false).toBool();
+            Device device;
 
-    m_device->init();
+            switch (types.indexOf(getConfig()->value(QString("%1/type").arg(name)).toString()))
+            {
+                case 0:  device = Device(new NobbyBalance(port, name, debug)); break;
+                default: continue;
+            }
+
+            connect(device.data(), &DeviceObject::availabilityUpdated, this, &Controller::availabilityUpdated);
+            connect(device.data(), &DeviceObject::propertiesUpdated, this, &Controller::propertiesUpdated);
+
+            m_devices.append(device);
+            device->init();
+        }
+    }
 }
 
 void Controller::quit(void)
 {
-    mqttPublish(mqttTopic("device/custom/%1").arg(m_device->name()), {{"status", "offline"}}, true);
+    for (int i = 0; i < m_devices.count(); i++)
+        mqttPublish(mqttTopic("device/custom/%1").arg(m_devices.at(i)->name()), {{"status", "offline"}}, true);
 }
 
 void Controller::mqttConnected(void)
 {
     mqttSubscribe(mqttTopic("service/custom"));
-    mqttSubscribe(mqttTopic("td/custom/%1").arg(m_device->name()));
+
+    for (int i = 0; i < m_devices.count(); i++)
+        mqttSubscribe(mqttTopic("td/custom/%1").arg(m_devices.at(i)->name()));
+
     mqttPublishStatus();
 }
 
@@ -42,41 +64,59 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
     else if (subTopic == "status/custom")
     {
         QJsonArray devices = json.value("devices").toArray();
-        QJsonObject options, data;
+
+        for (int i = 0; i < m_devices.count(); i++)
+        {
+            const Device &device = m_devices.at(i);
+
+            bool check = true;
+
+            for (auto it = devices.begin(); it != devices.end(); it++)
+            {
+                if (it->toObject().value(json.value("names").toBool() ? "name" : "id") == device->name())
+                {
+                    check = false;
+                    break;
+                }
+            }
+
+            if (!check)
+                continue;
+
+            mqttPublish(mqttTopic("command/custom"), QJsonObject {{"action", "updateDevice"}, {"data", QJsonObject {{"real", true}, {"active", true}, {"cloud", false}, {"discovery", false}, {"name", device->name()}, {"id", device->name()}, {"exposes", device->exposes()}, {"options", device->options()}}}});
+        }
 
         mqttUnsubscribe(mqttTopic("service/custom"));
         mqttUnsubscribe(mqttTopic("status/custom"));
-
-        for (auto it = devices.begin(); it != devices.end(); it++)
-            if (it->toObject().value(json.value("names").toBool() ? "name" : "id") == m_device->name())
-                return;
-
-        data.insert("name", m_device->name());
-        data.insert("id", m_device->name());
-        data.insert("real", true);
-        data.insert("active", true);
-        data.insert("cloud", false);
-        data.insert("discovery", false);
-        data.insert("exposes", QJsonArray::fromStringList(m_device->exposes()));
-        data.insert("options", QJsonObject::fromVariantMap(m_device->options()));
-
-        mqttPublish(mqttTopic("command/custom"), QJsonObject {{"action", "updateDevice"}, {"data", data}});
     }
-    else if (topic.name() == mqttTopic("td/custom/%1").arg(m_device->name()))
+    else if (subTopic.startsWith("td/custom/"))
     {
-        for (auto it = json.begin(); it != json.end(); it++)
-            m_device->action(it.key(), it.value().toVariant());
+        QString name = subTopic.split('/').last();
+
+        for (int i = 0; i < m_devices.count(); i++)
+        {
+            const Device &device = m_devices.at(i);
+
+            if (device->name() != name)
+                continue;
+
+            for (auto it = json.begin(); it != json.end(); it++)
+                device->action(it.key(), it.value().toVariant());
+
+            break;
+        }
     }
 }
 
 void Controller::availabilityUpdated(Availability availability)
 {
+    DeviceObject *device = reinterpret_cast <DeviceObject*> (sender());
     QString status = availability == Availability::Online ? "online" : "offline";
-    mqttPublish(mqttTopic("device/custom/%1").arg(m_device->name()), {{"status", status}}, true);
-    logInfo << "Device is" << status;
+    mqttPublish(mqttTopic("device/custom/%1").arg(device->name()), {{"status", status}}, true);
+    logInfo << device << "is" << status;
 }
 
 void Controller::propertiesUpdated(const QMap<QString, QVariant> &properties)
 {
-    mqttPublish(mqttTopic("fd/custom/%1").arg(m_device->name()), QJsonObject::fromVariantMap(properties));
+    mqttPublish(mqttTopic("fd/custom/%1").arg(reinterpret_cast <DeviceObject*> (sender())->name()), QJsonObject::fromVariantMap(properties));
 }

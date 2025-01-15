@@ -15,6 +15,7 @@
 #define FRAME_NETWORK_QUERY         0x63
 
 #include <QHostAddress>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QSerialPort>
 #include <QSettings>
@@ -54,8 +55,8 @@ public:
     virtual void action(const QString &name, const QVariant &data) = 0;
 
     inline QString name(void) { return m_name; }
-    inline QList <QString> exposes(void) { return m_exposes; }
-    inline QMap <QString, QVariant> options(void) { return m_options; }
+    inline QJsonArray exposes(void) { return m_exposes; }
+    inline QJsonObject options(void) { return m_options; }
 
     void init(void);
 
@@ -82,8 +83,11 @@ protected:
     qint64 m_lastSeen;
     quint8 m_protocol;
 
-    QList <QString> m_actions, m_exposes;
-    QMap <QString, QVariant> m_options, m_properties;
+    QJsonArray m_exposes;
+    QJsonObject m_options;
+
+    QList <QString> m_actions;
+    QMap <QString, QVariant> m_properties;
 
     virtual void parseFrame(quint8 type, const QByteArray &payload) = 0;
     virtual void ping(void) = 0;
@@ -113,5 +117,7 @@ signals:
     void propertiesUpdated(const QMap <QString, QVariant> &properties);
 
 };
+
+inline QDebug operator << (QDebug debug, DeviceObject *device) { return debug << "device" << device->name(); }
 
 #endif

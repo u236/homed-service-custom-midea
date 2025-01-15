@@ -16,7 +16,7 @@ public:
 
 private:
 
-    Device m_device;
+    QList <Device> m_devices;
 
 public slots:
 

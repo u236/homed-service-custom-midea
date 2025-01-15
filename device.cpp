@@ -75,14 +75,14 @@ void DeviceObject::init(void)
         if (!m_serial->open(QIODevice::ReadWrite))
             return;
 
-        logInfo << "Port" << m_serial->portName() << "opened successfully";
+        logInfo << this << "port" << m_serial->portName() << "opened successfully";
         m_serial->clear();
     }
     else
     {
         if (m_adddress.isNull() && !m_port)
         {
-            logWarning << "Invalid connection address or port number";
+            logWarning << this << "has invalid connection address or port number";
             return;
         }
 
@@ -138,7 +138,7 @@ void DeviceObject::sendFrame(quint8 type, const QByteArray &payload)
     data = QByteArray(reinterpret_cast <char*> (&header), sizeof(header)).append(payload);
     data.append(static_cast <char> (checksum(data.mid(1))));
 
-    logDebug(m_debug) << "Serial data sent:" << data.toHex(':');
+    logDebug(m_debug) << this << "serial data sent:" << data.toHex(':');
 
     m_device->write(data);
     m_device->waitForBytesWritten(1000);
@@ -153,7 +153,7 @@ void DeviceObject::serialError(QSerialPort::SerialPortError error)
     }
 
     if (!m_serialError)
-        logWarning << "Serial port error:" << error;
+        logWarning << this << "serial port error:" << error;
 
     m_resetTimer->start(RESET_TIMEOUT);
     m_serialError = true;
@@ -161,7 +161,7 @@ void DeviceObject::serialError(QSerialPort::SerialPortError error)
 
 void DeviceObject::socketError(QTcpSocket::SocketError error)
 {
-    logWarning << "Connection error:" << error;
+    logWarning << this << "connection error:" << error;
     m_resetTimer->start(RESET_TIMEOUT);
     m_connected = false;
 }
@@ -175,7 +175,7 @@ void DeviceObject::socketConnected(void)
     setsockopt(descriptor, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
     setsockopt(descriptor, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
 
-    logInfo << "Successfully connected to" << QString("%1:%2").arg(m_adddress.toString()).arg(m_port);
+    logInfo << this << "successfully connected to" << QString("%1:%2").arg(m_adddress.toString()).arg(m_port);
     m_socket->readAll();
     m_connected = true;
 }
@@ -189,7 +189,7 @@ void DeviceObject::readyRead(void)
 {
     QByteArray data = m_device->readAll();
 
-    logDebug(m_debug) << "Serial data received:" << data.toHex(':');
+    logDebug(m_debug) << this << "serial data received:" << data.toHex(':');
     m_buffer.append(data);
 
     if (m_buffer.length() >= BUFFER_LENGTH_LIMIT)
@@ -213,12 +213,12 @@ void DeviceObject::readyRead(void)
 
         if (static_cast <quint8> (m_buffer.at(offset + header->length) != checksum(m_buffer.mid(offset + 1, header->length - 1))))
         {
-            logWarning << "Frame" << m_buffer.mid(offset, header->length + 1).toHex(':') << "checksum mismatch";
+            logWarning << this << "frame" << m_buffer.mid(offset, header->length + 1).toHex(':') << "checksum mismatch";
             m_buffer.clear();
             return;
         }
 
-        logDebug(m_debug) << "Frame received" << m_buffer.mid(offset, header->length + 1).toHex(':');
+        logDebug(m_debug) << this << "frame received" << m_buffer.mid(offset, header->length + 1).toHex(':');
         updateAvailability(Availability::Online);
 
         m_lastSeen = QDateTime::currentMSecsSinceEpoch();

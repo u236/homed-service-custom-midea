@@ -2,7 +2,6 @@
 
 NobbyBalance::NobbyBalance(const QString &port, const QString &name, bool debug) : DeviceObject(port, name, debug)
 {
-    m_actions = {"status", "heater", "heaterTargetTemperature", "waterTargetTemperature"};
     m_exposes = {"switch", "heater", "flame", "mode", "waterTemperature", "waterTargetTemperature", "heaterTemperature", "heaterTargetTemperature", "pressure", "errorCode"};
 
     m_options.insert("heater", QJsonObject {{"type", "toggle"}});
@@ -11,6 +10,8 @@ NobbyBalance::NobbyBalance(const QString &port, const QString &name, bool debug)
     m_options.insert("heaterTemperature", QJsonObject {{"type", "sensor"}, {"unit", "°C"}});
     m_options.insert("heaterTargetTemperature", QJsonObject {{"type", "number"}, {"min", 30}, {"max", 80}, {"unit", "°C"}});
     m_options.insert("pressure", QJsonObject {{"type", "sensor"}, {"unit", "bar"}});
+
+    m_actions = {"status", "heater", "heaterTargetTemperature", "waterTargetTemperature"};
 }
 
 void NobbyBalance::action(const QString &name, const QVariant &value)
