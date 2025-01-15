@@ -39,14 +39,17 @@ struct headerStruct
     quint8 type;
 };
 
-class Device : public QObject
+class DeviceObject;
+typedef QSharedPointer <DeviceObject> Device;
+
+class DeviceObject : public QObject
 {
     Q_OBJECT
 
 public:
 
-    Device(const QString &portName, const QString &name, bool debug, QObject *parent);
-    ~Device(void);
+    DeviceObject(const QString &port, const QString &name, bool debug);
+    ~DeviceObject(void);
 
     virtual void action(const QString &name, const QVariant &data) = 0;
 

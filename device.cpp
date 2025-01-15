@@ -22,7 +22,7 @@ static uint8_t const crcTable[256] =
     0x74, 0x2A, 0xC8, 0x96, 0x15, 0x4B, 0xA9, 0xF7, 0xB6, 0xE8, 0x0A, 0x54, 0xD7, 0x89, 0x6B, 0x35
 };
 
-Device::Device(const QString &port, const QString &name, bool debug, QObject *parent) : QObject(parent), m_name(name), m_debug(debug), m_receiveTimer(new QTimer(this)), m_resetTimer(new QTimer(this)), m_updateTimer(new QTimer(this)), m_serial(new QSerialPort(this)), m_socket(new QTcpSocket(this)), m_serialError(false), m_connected(false), m_availability(Availability::Unknown), m_protocol(0)
+DeviceObject::DeviceObject(const QString &port, const QString &name, bool debug) : QObject(nullptr), m_name(name), m_debug(debug), m_receiveTimer(new QTimer(this)), m_resetTimer(new QTimer(this)), m_updateTimer(new QTimer(this)), m_serial(new QSerialPort(this)), m_socket(new QTcpSocket(this)), m_serialError(false), m_connected(false), m_availability(Availability::Unknown), m_protocol(0)
 {
      if (!port.startsWith("tcp://"))
      {
@@ -34,7 +34,7 @@ Device::Device(const QString &port, const QString &name, bool debug, QObject *pa
          m_serial->setParity(QSerialPort::NoParity);
          m_serial->setStopBits(QSerialPort::OneStop);
 
-         connect(m_serial, &QSerialPort::errorOccurred, this, &Device::serialError);
+         connect(m_serial, &QSerialPort::errorOccurred, this, &DeviceObject::serialError);
      }
      else
      {
@@ -44,14 +44,14 @@ Device::Device(const QString &port, const QString &name, bool debug, QObject *pa
          m_adddress = QHostAddress(list.value(0));
          m_port = static_cast <quint16> (list.value(1).toInt());
 
-         connect(m_socket, &QTcpSocket::errorOccurred, this, &Device::socketError);
-         connect(m_socket, &QTcpSocket::connected, this, &Device::socketConnected);
+         connect(m_socket, &QTcpSocket::errorOccurred, this, &DeviceObject::socketError);
+         connect(m_socket, &QTcpSocket::connected, this, &DeviceObject::socketConnected);
      }
 
-     connect(m_device, &QIODevice::readyRead, this, &Device::startTimer);
-     connect(m_receiveTimer, &QTimer::timeout, this, &Device::readyRead);
-     connect(m_resetTimer, &QTimer::timeout, this, &Device::reset);
-     connect(m_updateTimer, &QTimer::timeout, this, &Device::update);
+     connect(m_device, &QIODevice::readyRead, this, &DeviceObject::startTimer);
+     connect(m_receiveTimer, &QTimer::timeout, this, &DeviceObject::readyRead);
+     connect(m_resetTimer, &QTimer::timeout, this, &DeviceObject::reset);
+     connect(m_updateTimer, &QTimer::timeout, this, &DeviceObject::update);
 
      m_receiveTimer->setSingleShot(true);
      m_resetTimer->setSingleShot(true);
@@ -59,13 +59,13 @@ Device::Device(const QString &port, const QString &name, bool debug, QObject *pa
      m_updateTimer->start(UPDATE_INTERVAL);
 }
 
-Device::~Device(void)
+DeviceObject::~DeviceObject(void)
 {
     if (m_connected)
         m_socket->disconnectFromHost();
 }
 
-void Device::init(void)
+void DeviceObject::init(void)
 {
     if (m_device == m_serial)
     {
@@ -93,7 +93,7 @@ void Device::init(void)
     }
 }
 
-quint8 Device::checksum(const QByteArray &data)
+quint8 DeviceObject::checksum(const QByteArray &data)
 {
     quint8 checksum = 0;
 
@@ -103,7 +103,7 @@ quint8 Device::checksum(const QByteArray &data)
     return checksum;
 }
 
-quint8 Device::crc(const QByteArray &data)
+quint8 DeviceObject::crc(const QByteArray &data)
 {
     quint8 crc = 0;
 
@@ -113,7 +113,7 @@ quint8 Device::crc(const QByteArray &data)
     return crc;
 }
 
-void Device::updateAvailability(Availability availability)
+void DeviceObject::updateAvailability(Availability availability)
 {
     if (m_availability == availability)
         return;
@@ -122,7 +122,7 @@ void Device::updateAvailability(Availability availability)
     emit availabilityUpdated(availability);
 }
 
-void Device::sendFrame(quint8 type, const QByteArray &payload)
+void DeviceObject::sendFrame(quint8 type, const QByteArray &payload)
 {
     headerStruct header;
     QByteArray data;
@@ -144,7 +144,7 @@ void Device::sendFrame(quint8 type, const QByteArray &payload)
     m_device->waitForBytesWritten(1000);
 }
 
-void Device::serialError(QSerialPort::SerialPortError error)
+void DeviceObject::serialError(QSerialPort::SerialPortError error)
 {
     if (error == QSerialPort::SerialPortError::NoError)
     {
@@ -159,14 +159,14 @@ void Device::serialError(QSerialPort::SerialPortError error)
     m_serialError = true;
 }
 
-void Device::socketError(QTcpSocket::SocketError error)
+void DeviceObject::socketError(QTcpSocket::SocketError error)
 {
     logWarning << "Connection error:" << error;
     m_resetTimer->start(RESET_TIMEOUT);
     m_connected = false;
 }
 
-void Device::socketConnected(void)
+void DeviceObject::socketConnected(void)
 {
     int descriptor = m_socket->socketDescriptor(), keepAlive = 1, interval = 10, count = 3;
 
@@ -180,12 +180,12 @@ void Device::socketConnected(void)
     m_connected = true;
 }
 
-void Device::startTimer(void)
+void DeviceObject::startTimer(void)
 {
     m_receiveTimer->start(RECEIVE_TIMEOUT);
 }
 
-void Device::readyRead(void)
+void DeviceObject::readyRead(void)
 {
     QByteArray data = m_device->readAll();
 
@@ -245,12 +245,12 @@ void Device::readyRead(void)
     }
 }
 
-void Device::reset(void)
+void DeviceObject::reset(void)
 {
     init();
 }
 
-void Device::update(void)
+void DeviceObject::update(void)
 {
     qint64 now = QDateTime::currentMSecsSinceEpoch();
 

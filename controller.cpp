@@ -7,10 +7,10 @@ Controller::Controller(const QString &configFile) : HOMEd(configFile)
     logInfo << "Starting version" << SERVICE_VERSION;
     logInfo << "Configuration file is" << getConfig()->fileName();
 
-    m_device = new NobbyBalance(getConfig()->value("device/port", "/dev/ttyUSB0").toString(), getConfig()->value("device/name", "nobby").toString(), getConfig()->value("device/debug", false).toBool(), this);
+    m_device = Device(new NobbyBalance(getConfig()->value("device/port", "/dev/ttyUSB0").toString(), getConfig()->value("device/name", "nobby").toString(), getConfig()->value("device/debug", false).toBool()));
 
-    connect(m_device, &Device::availabilityUpdated, this, &Controller::availabilityUpdated);
-    connect(m_device, &Device::propertiesUpdated, this, &Controller::propertiesUpdated);
+    connect(m_device.data(), &DeviceObject::availabilityUpdated, this, &Controller::availabilityUpdated);
+    connect(m_device.data(), &DeviceObject::propertiesUpdated, this, &Controller::propertiesUpdated);
 
     m_device->init();
 }

@@ -16,7 +16,7 @@ public:
 
 private:
 
-    Device *m_device;
+    Device m_device;
 
 public slots:
 

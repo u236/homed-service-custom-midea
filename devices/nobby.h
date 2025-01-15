@@ -5,12 +5,12 @@
 
 #include "device.h"
 
-class NobbyBalance : public Device
+class NobbyBalance : public DeviceObject
 {
 
 public:
 
-    NobbyBalance(const QString &port, const QString &name, bool debug, QObject *parent);
+    NobbyBalance(const QString &port, const QString &name, bool debug);
     void action(const QString &name, const QVariant &data) override;
 
 private:
