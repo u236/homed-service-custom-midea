@@ -5,6 +5,7 @@
 Controller::Controller(const QString &configFile) : HOMEd(configFile)
 {
     QList <QString> names = getConfig()->childGroups(), types = {"nobbyBalance"};
+
     logInfo << "Starting version" << SERVICE_VERSION;
     logInfo << "Configuration file is" << getConfig()->fileName();
 
