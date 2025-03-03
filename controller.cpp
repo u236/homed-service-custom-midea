@@ -117,7 +117,7 @@ void Controller::availabilityUpdated(Availability availability)
     logInfo << device << "is" << status;
 }
 
-void Controller::propertiesUpdated(const QMap<QString, QVariant> &properties)
+void Controller::propertiesUpdated(const QMap <QString, QVariant> &properties)
 {
     mqttPublish(mqttTopic("fd/custom/%1").arg(reinterpret_cast <DeviceObject*> (sender())->name()), QJsonObject::fromVariantMap(properties));
 }
