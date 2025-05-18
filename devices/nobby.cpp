@@ -14,51 +14,59 @@ NobbyBalance::NobbyBalance(const QString &port, const QString &name, bool debug)
     m_actions = {"status", "heater", "heaterTargetTemperature", "waterTargetTemperature"};
 }
 
-void NobbyBalance::action(const QString &name, const QVariant &value)
+void NobbyBalance::action(const QString &name, const QVariant &data)
 {
-    quint8 data[30];
+    quint8 buffer[30];
     QByteArray payload;
 
-    memset(data, 0, sizeof(data));
+    memset(buffer, 0, sizeof(buffer));
 
     switch (m_actions.indexOf(name))
     {
         case 0: // status
         {
             QList <QString> list = {"toggle", "on", "off"};
-            qint8 command = list.indexOf(value.toString());
+            qint8 command = list.indexOf(data.toString());
 
             if (command < 0)
                 return;
 
-            data[0] = command ? command : m_properties.value("status").toString() != "on" ? 0x01 : 0x02;
-            data[1] = 0x01;
+            buffer[0] = command ? command : m_properties.value("status").toString() != "on" ? 0x01 : 0x02;
+            buffer[1] = 0x01;
             break;
         }
 
         case 1: // heater
-            data[0] = 0x04;
-            data[1] = 0x01;
-            data[2] = value.toBool() ? 0x01 : 0x02;
+        {
+            buffer[0] = 0x04;
+            buffer[1] = 0x01;
+            buffer[2] = data.toBool() ? 0x01 : 0x02;
             break;
+        }
 
         case 2: // heaterTargetTemperature
-            data[0] = 0x04;
-            data[1] = 0x13;
-            data[2] = static_cast <quint8> (value.toInt());
+        {
+            quint8 value = static_cast <quint8> (data.toInt());
+            buffer[0] = 0x04;
+            buffer[1] = 0x13;
+            buffer[2] = value < 30 ? 30 : value > 80 ? 80 : value;
             break;
+        }
 
         case 3: // waterTargetTemperature
-            data[0] = 0x04;
-            data[1] = 0x12;
-            data[2] = static_cast <quint8> (value.toInt());
+        {
+            quint8 value = static_cast <quint8> (data.toInt());
+            buffer[0] = 0x04;
+            buffer[1] = 0x12;
+            buffer[2] = value < 35 ? 35 : value > 60 ? 60 : value;
             break;
+        }
 
         default:
             return;
     }
 
-    payload = QByteArray(reinterpret_cast <char*> (data), sizeof(data));
+    payload = QByteArray(reinterpret_cast <char*> (buffer), sizeof(buffer));
     sendFrame(FRAME_SET, payload.append(static_cast <char> (crc(payload))));
 }
 
@@ -108,13 +116,13 @@ void NobbyBalance::parseFrame(quint8 type, const QByteArray &payload)
 
 void NobbyBalance::ping(void)
 {
-    quint8 data[30];
+    quint8 buffer[30];
     QByteArray payload;
 
-    memset(data, 0, sizeof(data));
-    data[0] = 0x01;
-    data[1] = 0x01;
+    memset(buffer, 0, sizeof(buffer));
+    buffer[0] = 0x01;
+    buffer[1] = 0x01;
 
-    payload = QByteArray(reinterpret_cast <char*> (data), sizeof(data));
+    payload = QByteArray(reinterpret_cast <char*> (buffer), sizeof(buffer));
     sendFrame(FRAME_GET, payload.append(static_cast <char> (crc(payload))));
 }
