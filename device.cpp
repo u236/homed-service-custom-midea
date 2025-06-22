@@ -211,7 +211,7 @@ void DeviceObject::readyRead(void)
         if (m_buffer.length() - offset < header->length + 1)
             return;
 
-        if (static_cast <quint8> (m_buffer.at(offset + header->length) != checksum(m_buffer.mid(offset + 1, header->length - 1))))
+        if (static_cast <quint8> (m_buffer.at(offset + header->length)) != checksum(m_buffer.mid(offset + 1, header->length - 1)))
         {
             logWarning << this << "frame" << m_buffer.mid(offset, header->length + 1).toHex(':') << "checksum mismatch";
             m_buffer.clear();
