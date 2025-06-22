@@ -95,12 +95,14 @@ void DeviceObject::init(void)
 
 quint8 DeviceObject::checksum(const QByteArray &data)
 {
-    quint8 checksum = 0;
+    qint8 checksum = 0;
 
     for (int i = 0; i < data.length(); i++)
         checksum -= static_cast <quint8> (data.at(i));
 
-    return checksum;
+    logInfo << "here" << static_cast <quint8> (checksum);
+
+    return static_cast <quint8> (checksum);
 }
 
 quint8 DeviceObject::crc(const QByteArray &data)
@@ -213,7 +215,7 @@ void DeviceObject::readyRead(void)
 
         if (static_cast <quint8> (m_buffer.at(offset + header->length) != checksum(m_buffer.mid(offset + 1, header->length - 1))))
         {
-            logWarning << this << "frame" << m_buffer.mid(offset, header->length + 1).toHex(':') << "checksum mismatch";
+            logWarning << this << "frame" << m_buffer.mid(offset, header->length + 1).toHex(':') << "checksum mismatch" << m_buffer.mid(offset + header->length).toHex() << static_cast <quint8> (m_buffer.at(offset + header->length)) << checksum(m_buffer.mid(offset + 1, header->length - 1));
             m_buffer.clear();
             return;
         }
