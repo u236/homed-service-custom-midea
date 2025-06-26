@@ -2,12 +2,9 @@
 #include "controller.h"
 #include "logger.h"
 
-Controller::Controller(const QString &configFile) : HOMEd(configFile)
+Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, configFile)
 {
     QList <QString> names = getConfig()->childGroups(), types = {"nobbyBalance"};
-
-    logInfo << "Starting version" << SERVICE_VERSION;
-    logInfo << "Configuration file is" << getConfig()->fileName();
 
     for (int i = 0; i < names.count(); i++)
     {
