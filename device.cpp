@@ -80,7 +80,7 @@ void DeviceObject::init(void)
     }
     else
     {
-        if (m_adddress.isNull() && !m_port)
+        if (m_adddress.isNull() || !m_port)
         {
             logWarning << this << "has invalid connection address or port number";
             return;
