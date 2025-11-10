@@ -84,8 +84,8 @@ void NobbyBalance::parseFrame(quint8 type, const QByteArray &payload)
                 return;
 
             properties.insert("status", payload.at(2) & 0x04 ? "on" : "off");
-            properties.insert("heater", payload.at(4) & 0x01 ? true : false);
-            properties.insert("flame", payload.at(2) & 0x08 ? true : false);
+            properties.insert("heater", payload.at(4) & 0x01);
+            properties.insert("flame", payload.at(2) & 0x08);
 
             switch (payload.at(2) >> 4 & 0x03)
             {
