@@ -3,8 +3,8 @@
 
 #define RECEIVE_TIMEOUT             20
 #define RESET_TIMEOUT               10000
-#define UPDATE_INTERVAL             3000
-#define UNAVAILABLE_TIMEOUT         15000
+#define UPDATE_INTERVAL             5000
+#define UNAVAILABLE_TIMEOUT         30000
 
 #define START_BYTE                  0xAA
 #define BUFFER_LENGTH_LIMIT         1024

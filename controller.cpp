@@ -35,6 +35,8 @@ void Controller::quit(void)
 {
     for (int i = 0; i < m_devices.count(); i++)
         mqttPublish(mqttTopic("device/custom/%1").arg(m_devices.at(i)->name()), {{"status", "offline"}}, true);
+
+    HOMEd::quit();
 }
 
 void Controller::mqttConnected(void)
