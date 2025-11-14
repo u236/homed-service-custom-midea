@@ -4,12 +4,12 @@ NobbyBalance::NobbyBalance(const QString &port, const QString &name, bool debug)
 {
     m_exposes = {"switch", "heater", "flame", "mode", "waterTemperature", "waterTargetTemperature", "heaterTemperature", "heaterTargetTemperature", "pressure", "errorCode"};
 
-    m_options.insert("heater",                  QMap <QString, QVariant> {{"type", "toggle"}});
-    m_options.insert("waterTemperature",        QMap <QString, QVariant> {{"type", "sensor"}, {"unit", "°C"}});
-    m_options.insert("waterTargetTemperature",  QMap <QString, QVariant> {{"type", "number"}, {"min", 35}, {"max", 60}, {"unit", "°C"}});
-    m_options.insert("heaterTemperature",       QMap <QString, QVariant> {{"type", "sensor"}, {"unit", "°C"}});
-    m_options.insert("heaterTargetTemperature", QMap <QString, QVariant> {{"type", "number"}, {"min", 30}, {"max", 80}, {"unit", "°C"}});
-    m_options.insert("pressure",                QMap <QString, QVariant> {{"type", "sensor"}, {"unit", "bar"}});
+    m_options.insert("heater",                  QJsonObject {{"type", "toggle"}});
+    m_options.insert("waterTemperature",        QJsonObject {{"type", "sensor"}, {"unit", "°C"}});
+    m_options.insert("waterTargetTemperature",  QJsonObject {{"type", "number"}, {"min", 35}, {"max", 60}, {"unit", "°C"}});
+    m_options.insert("heaterTemperature",       QJsonObject {{"type", "sensor"}, {"unit", "°C"}});
+    m_options.insert("heaterTargetTemperature", QJsonObject {{"type", "number"}, {"min", 30}, {"max", 80}, {"unit", "°C"}});
+    m_options.insert("pressure",                QJsonObject {{"type", "sensor"}, {"unit", "bar"}});
 
     m_actions = {"status", "heater", "heaterTargetTemperature", "waterTargetTemperature"};
 }
@@ -84,8 +84,8 @@ void NobbyBalance::parseFrame(quint8 type, const QByteArray &payload)
                 return;
 
             properties.insert("status", payload.at(2) & 0x04 ? "on" : "off");
-            properties.insert("heater", payload.at(4) & 0x01);
-            properties.insert("flame", payload.at(2) & 0x08);
+            properties.insert("heater", payload.at(4) & 0x01 ? true : false);
+            properties.insert("flame", payload.at(2) & 0x08 ? true : false);
 
             switch (payload.at(2) >> 4 & 0x03)
             {

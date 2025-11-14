@@ -255,7 +255,10 @@ void DeviceObject::update(void)
     qint64 now = QDateTime::currentMSecsSinceEpoch();
 
     if (now > m_lastSeen + UPDATE_INTERVAL)
+    {
+        logDebug(m_debug) << this << "ping";
         ping();
+    }
 
     if (now > m_lastSeen + UNAVAILABLE_TIMEOUT && m_availability != Availability::Offline)
         updateAvailability(Availability::Offline);
