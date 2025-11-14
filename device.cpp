@@ -162,6 +162,7 @@ void DeviceObject::serialError(QSerialPort::SerialPortError error)
 void DeviceObject::socketError(QTcpSocket::SocketError error)
 {
     logWarning << this << "connection error:" << error;
+    updateAvailability(Availability::Offline);
     m_resetTimer->start(RESET_TIMEOUT);
     m_connected = false;
 }
@@ -220,13 +221,12 @@ void DeviceObject::readyRead(void)
 
         logDebug(m_debug) << this << "frame received" << m_buffer.mid(offset, header->length + 1).toHex(':');
         updateAvailability(Availability::Online);
-
         m_lastSeen = QDateTime::currentMSecsSinceEpoch();
         m_protocol = header->protocol;
 
         switch (header->type)
         {
-            case FRAME_NETWORK_QUERY: // TODO: use real address?
+            case FRAME_NETWORK_QUERY:
             {
                 quint8 data[20] = {0x01, 0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
                 QByteArray payload = QByteArray(reinterpret_cast <char*> (data), sizeof(data));
@@ -254,10 +254,10 @@ void DeviceObject::update(void)
 {
     qint64 now = QDateTime::currentMSecsSinceEpoch();
 
-    if (now > m_lastSeen + UNAVAILABLE_TIMEOUT && m_availability != Availability::Offline)
+    if (now > m_lastSeen + UNAVAILABLE_TIMEOUT)
         updateAvailability(Availability::Offline);
 
-    if (now > m_lastSeen + PING_INTERVAL)
+    if (now > m_lastSeen + PING_TIMEOUT)
     {
         logDebug(m_debug) << this << "ping";
         ping();

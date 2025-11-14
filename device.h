@@ -4,7 +4,7 @@
 #define RECEIVE_TIMEOUT             20
 #define RESET_TIMEOUT               10000
 
-#define PING_INTERVAL               3000
+#define PING_TIMEOUT                5000
 #define UNAVAILABLE_TIMEOUT         15000
 
 #define START_BYTE                  0xAA
