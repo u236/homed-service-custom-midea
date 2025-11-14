@@ -56,7 +56,7 @@ DeviceObject::DeviceObject(quint8 appliance, const QString &port, const QString 
      m_receiveTimer->setSingleShot(true);
      m_resetTimer->setSingleShot(true);
 
-     m_updateTimer->start(UPDATE_INTERVAL);
+     m_updateTimer->start(1000);
 }
 
 DeviceObject::~DeviceObject(void)
@@ -254,12 +254,12 @@ void DeviceObject::update(void)
 {
     qint64 now = QDateTime::currentMSecsSinceEpoch();
 
-    if (now > m_lastSeen + UPDATE_INTERVAL)
+    if (now > m_lastSeen + UNAVAILABLE_TIMEOUT && m_availability != Availability::Offline)
+        updateAvailability(Availability::Offline);
+
+    if (now > m_lastSeen + PING_INTERVAL)
     {
         logDebug(m_debug) << this << "ping";
         ping();
     }
-
-    if (now > m_lastSeen + UNAVAILABLE_TIMEOUT && m_availability != Availability::Offline)
-        updateAvailability(Availability::Offline);
 }
