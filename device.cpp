@@ -24,39 +24,45 @@ static uint8_t const crcTable[256] =
 
 DeviceObject::DeviceObject(quint8 appliance, const QString &port, const QString &name, bool debug) : QObject(nullptr), m_appliance(appliance), m_protocol(0), m_name(name), m_debug(debug), m_receiveTimer(new QTimer(this)), m_resetTimer(new QTimer(this)), m_updateTimer(new QTimer(this)), m_serial(new QSerialPort(this)), m_socket(new QTcpSocket(this)), m_serialError(false), m_connected(false), m_availability(Availability::Unknown)
 {
-     if (!port.startsWith("tcp://"))
-     {
-         m_device = m_serial;
+    if (!port.startsWith("tcp://"))
+    {
+        m_device = m_serial;
 
-         m_serial->setPortName(port);
-         m_serial->setBaudRate(9600);
-         m_serial->setDataBits(QSerialPort::Data8);
-         m_serial->setParity(QSerialPort::NoParity);
-         m_serial->setStopBits(QSerialPort::OneStop);
+        m_serial->setPortName(port);
+        m_serial->setBaudRate(9600);
+        m_serial->setDataBits(QSerialPort::Data8);
+        m_serial->setParity(QSerialPort::NoParity);
+        m_serial->setStopBits(QSerialPort::OneStop);
 
-         connect(m_serial, &QSerialPort::errorOccurred, this, &DeviceObject::serialError);
-     }
-     else
-     {
-         QList <QString> list = QString(port).remove("tcp://").split(':');
+        connect(m_serial, &QSerialPort::errorOccurred, this, &DeviceObject::serialError);
+    }
+    else
+    {
+        int descriptor = m_socket->socketDescriptor(), keepAlive = 1, interval = 10, count = 3;
+        QList <QString> list = QString(port).remove("tcp://").split(':');
 
-         m_device = m_socket;
-         m_adddress = QHostAddress(list.value(0));
-         m_port = static_cast <quint16> (list.value(1).toInt());
+        setsockopt(descriptor, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(keepAlive));
+        setsockopt(descriptor, SOL_TCP, TCP_KEEPIDLE, &interval, sizeof(interval));
+        setsockopt(descriptor, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+        setsockopt(descriptor, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
 
-         connect(m_socket, &QTcpSocket::errorOccurred, this, &DeviceObject::socketError);
-         connect(m_socket, &QTcpSocket::connected, this, &DeviceObject::socketConnected);
-     }
+        m_device = m_socket;
+        m_adddress = QHostAddress(list.value(0));
+        m_port = static_cast <quint16> (list.value(1).toInt());
 
-     connect(m_device, &QIODevice::readyRead, this, &DeviceObject::startTimer);
-     connect(m_receiveTimer, &QTimer::timeout, this, &DeviceObject::readyRead);
-     connect(m_resetTimer, &QTimer::timeout, this, &DeviceObject::reset);
-     connect(m_updateTimer, &QTimer::timeout, this, &DeviceObject::update);
+        connect(m_socket, &QTcpSocket::errorOccurred, this, &DeviceObject::socketError);
+        connect(m_socket, &QTcpSocket::connected, this, &DeviceObject::socketConnected);
+    }
 
-     m_receiveTimer->setSingleShot(true);
-     m_resetTimer->setSingleShot(true);
+    connect(m_device, &QIODevice::readyRead, this, &DeviceObject::startTimer);
+    connect(m_receiveTimer, &QTimer::timeout, this, &DeviceObject::readyRead);
+    connect(m_resetTimer, &QTimer::timeout, this, &DeviceObject::reset);
+    connect(m_updateTimer, &QTimer::timeout, this, &DeviceObject::update);
 
-     m_updateTimer->start(1000);
+    m_receiveTimer->setSingleShot(true);
+    m_resetTimer->setSingleShot(true);
+
+    m_updateTimer->start(1000);
 }
 
 DeviceObject::~DeviceObject(void)
@@ -169,13 +175,6 @@ void DeviceObject::socketError(QTcpSocket::SocketError error)
 
 void DeviceObject::socketConnected(void)
 {
-    int descriptor = m_socket->socketDescriptor(), keepAlive = 1, interval = 10, count = 3;
-
-    setsockopt(descriptor, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(keepAlive));
-    setsockopt(descriptor, SOL_TCP, TCP_KEEPIDLE, &interval, sizeof(interval));
-    setsockopt(descriptor, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
-    setsockopt(descriptor, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
-
     logInfo << this << "successfully connected to" << QString("%1:%2").arg(m_adddress.toString()).arg(m_port);
     m_socket->readAll();
     m_connected = true;
