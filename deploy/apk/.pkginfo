@@ -1,0 +1,4 @@
+name = homed-custom-midea
+description = HOMEd Custom-Midea Service
+maintainer = u236 <mail@u236.org>
+depends = homed-qt
