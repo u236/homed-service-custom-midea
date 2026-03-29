@@ -1,0 +1,7 @@
+pkgname = homed-custom-midea
+pkgver =
+arch =
+pkgdesc = HOMEd Custom-Midea Service
+maintainer = u236 <mail@u236.org>
+depend = homed-qt
+backup = etc/homed/homed-custom-midea.conf
