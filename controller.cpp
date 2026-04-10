@@ -83,7 +83,7 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
             if (!check)
                 continue;
 
-            mqttPublish(mqttTopic("command/custom"), QJsonObject {{"action", "updateDevice"}, {"data", QJsonObject {{"real", true}, {"active", true}, {"cloud", false}, {"discovery", false}, {"name", device->name()}, {"id", device->name()}, {"exposes", device->exposes()}, {"options", device->options()}}}});
+            mqttPublish(mqttTopic("command/custom"), QJsonObject {{"action", "updateDevice"}, {"data", QJsonObject {{"real", true}, {"active", true}, {"cloud", false}, {"discovery", false}, {"id", device->name()}, {"service", QCoreApplication::applicationName()}, {"name", device->name()}, {"exposes", device->exposes()}, {"options", device->options()}}}});
         }
 
         mqttUnsubscribe(mqttTopic("service/custom"));
