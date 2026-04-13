@@ -46,7 +46,7 @@ void Controller::mqttConnected(void)
     for (int i = 0; i < m_devices.count(); i++)
         mqttSubscribe(mqttTopic("td/custom/%1").arg(m_devices.at(i)->name()));
 
-    mqttPublishStatus();
+    mqttPublishService();
 }
 
 void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &topic)
