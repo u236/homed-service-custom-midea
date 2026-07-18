@@ -27,8 +27,7 @@ enum class Availability
 {
     Unknown,
     Online,
-    Offline,
-    Inactive
+    Offline
 };
 
 struct headerStruct
@@ -60,6 +59,9 @@ public:
     inline QString name(void) { return m_name; }
     inline void setName(const QString &value) { m_name = value; }
 
+    inline bool published(void) { return m_published; }
+    inline void setPublished(void) { m_published = true; }
+
     inline QJsonArray exposes(void) { return m_exposes; }
     inline QJsonObject options(void) { return m_options; }
 
@@ -70,7 +72,7 @@ protected:
     quint8 m_appliance, m_protocol;
 
     QString m_id, m_name;
-    bool m_debug;
+    bool m_debug, m_published;
 
     QTimer *m_receiveTimer, *m_resetTimer, *m_updateTimer;
 
@@ -124,6 +126,6 @@ signals:
 
 };
 
-inline QDebug operator << (QDebug debug, DeviceObject *device) { return debug << "device" << device->name(); }
+inline QDebug operator << (QDebug debug, DeviceObject *device) { return debug << "device" << device->id(); }
 
 #endif

@@ -53,7 +53,12 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
     if (subTopic == "service/custom")
     {
         if (json.value("status").toString() != "online")
+        {
+            for (int i = 0; i < m_devices.count(); i++)
+                mqttUnsubscribe(mqttTopic("td/custom/%1").arg(m_names ? m_devices.at(i)->name() : m_devices.at(i)->id()));
+
             return;
+        }
 
         mqttSubscribe(mqttTopic("status/custom"));
     }
@@ -71,11 +76,20 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
             for (auto it = devices.begin(); it != devices.end(); it++)
             {
                 QJsonObject item = it->toObject();
+                QString name = item.value("name").toString();
 
                 if (item.value("id").toString() != device->id())
                     continue;
 
-                device->setName(item.value("name").toString());
+                if (name.isEmpty())
+                    name = device->id();
+
+                if (m_names && name != device->name())
+                {
+                    mqttUnsubscribe(mqttTopic("td/custom/%1").arg(device->name()));
+                    device->setName(name);
+                }
+
                 check = false;
                 break;
             }
@@ -83,13 +97,14 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
             mqttSubscribe(mqttTopic("td/custom/%1").arg(m_names ? device->name() : device->id()));
 
             if (!check)
-                continue;
+                device->setPublished();
 
-            mqttPublish(mqttTopic("command/custom"), QJsonObject {{"action", "updateDevice"}, {"data", QJsonObject {{"real", true}, {"active", true}, {"cloud", false}, {"discovery", false}, {"id", device->id()}, {"service", QCoreApplication::applicationName()}, {"name", device->name()}, {"exposes", device->exposes()}, {"options", device->options()}}}});
+            if (!device->published())
+            {
+                mqttPublish(mqttTopic("command/custom"), QJsonObject {{"action", "updateDevice"}, {"data", QJsonObject {{"real", true}, {"active", true}, {"cloud", false}, {"discovery", false}, {"id", device->id()}, {"service", QCoreApplication::applicationName()}, {"exposes", device->exposes()}, {"options", device->options()}}}});
+                device->setPublished();
+            }
         }
-
-        mqttUnsubscribe(mqttTopic("service/custom"));
-        mqttUnsubscribe(mqttTopic("status/custom"));
     }
     else if (subTopic.startsWith("td/custom/"))
     {
