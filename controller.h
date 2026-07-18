@@ -16,6 +16,7 @@ public:
 
 private:
 
+    bool m_names;
     QList <Device> m_devices;
 
 public slots:

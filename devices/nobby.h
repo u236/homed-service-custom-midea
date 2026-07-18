@@ -8,7 +8,7 @@ class NobbyBalance : public DeviceObject
 
 public:
 
-    NobbyBalance(const QString &port, const QString &name, bool debug);
+    NobbyBalance(const QString &port, const QString &id, bool debug);
     void action(const QString &name, const QVariant &data) override;
 
 private:

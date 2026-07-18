@@ -1,6 +1,6 @@
 #include "nobby.h"
 
-NobbyBalance::NobbyBalance(const QString &port, const QString &name, bool debug) : DeviceObject(0xE6, port, name, debug)
+NobbyBalance::NobbyBalance(const QString &port, const QString &id, bool debug) : DeviceObject(0xE6, port, id, debug)
 {
     m_exposes = {"switch", "heater", "flame", "mode", "waterTemperature", "waterTargetTemperature", "heaterTemperature", "heaterTargetTemperature", "pressure", "errorCode"};
 

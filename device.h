@@ -50,12 +50,16 @@ class DeviceObject : public QObject
 
 public:
 
-    DeviceObject(quint8 appliance, const QString &port, const QString &name, bool debug);
+    DeviceObject(quint8 appliance, const QString &port, const QString &id, bool debug);
     ~DeviceObject(void);
 
     virtual void action(const QString &name, const QVariant &data) = 0;
 
+    inline QString id(void) { return m_id; }
+
     inline QString name(void) { return m_name; }
+    inline void setName(const QString &value) { m_name = value; }
+
     inline QJsonArray exposes(void) { return m_exposes; }
     inline QJsonObject options(void) { return m_options; }
 
@@ -65,7 +69,7 @@ protected:
 
     quint8 m_appliance, m_protocol;
 
-    QString m_name;
+    QString m_id, m_name;
     bool m_debug;
 
     QTimer *m_receiveTimer, *m_resetTimer, *m_updateTimer;
