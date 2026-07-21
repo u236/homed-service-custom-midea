@@ -16,6 +16,9 @@ Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, confi
             bool debug = getConfig()->value(QString("%1/debug").arg(name), false).toBool();
             Device device;
 
+            if (port.isEmpty())
+                continue;
+
             switch (types.indexOf(getConfig()->value(QString("%1/type").arg(name)).toString()))
             {
                 case 0:  device = Device(new NobbyBalance(port, name, debug)); break;

@@ -19,7 +19,6 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QSerialPort>
-#include <QSettings>
 #include <QTcpSocket>
 #include <QTimer>
 
