@@ -119,7 +119,7 @@ void DeviceObject::updateAvailability(Availability availability)
         return;
 
     m_availability = availability;
-    emit availabilityUpdated(availability);
+    emit availabilityUpdated();
 }
 
 void DeviceObject::sendFrame(quint8 type, const QByteArray &payload)

@@ -1,7 +1,7 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#define SERVICE_VERSION     "1.0.5"
+#define SERVICE_VERSION     "1.0.6"
 
 #include "device.h"
 #include "homed.h"
@@ -16,8 +16,10 @@ public:
 
 private:
 
-    bool m_names;
+    bool m_status, m_names;
     QList <Device> m_devices;
+
+    void publishAvailability(DeviceObject *device);
 
 public slots:
 
@@ -28,8 +30,8 @@ private slots:
     void mqttConnected(void) override;
     void mqttReceived(const QByteArray &message, const QMqttTopicName &topic) override;
 
-    void availabilityUpdated(Availability availability);
-    void propertiesUpdated(const QMap <QString, QVariant> &properties);
+    void availabilityUpdated(void);
+    void propertiesUpdated(void);
 
 };
 

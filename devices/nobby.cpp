@@ -106,7 +106,7 @@ void NobbyBalance::parseFrame(quint8 type, const QByteArray &payload)
             if (m_properties != properties)
             {
                 m_properties = properties;
-                emit propertiesUpdated(properties);
+                emit propertiesUpdated();
             }
 
             break;

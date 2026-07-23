@@ -2,7 +2,7 @@
 #include "controller.h"
 #include "logger.h"
 
-Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, configFile), m_names(false)
+Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, configFile), m_status(false), m_names(false)
 {
     QList <QString> names = getConfig()->childGroups(), types = {"nobbyBalance"};
 
@@ -21,7 +21,7 @@ Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, confi
 
             switch (types.indexOf(getConfig()->value(QString("%1/type").arg(name)).toString()))
             {
-                case 0:  device = Device(new NobbyBalance(port, name, debug)); break;
+                case 0:  device = Device(new NobbyBalance(port, QString("midea-%1").arg(name), debug)); break;
                 default: continue;
             }
 
@@ -32,6 +32,13 @@ Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, confi
             device->init();
         }
     }
+}
+
+void Controller::publishAvailability(DeviceObject *device)
+{
+    QString status = device->availability() == Availability::Online ? "online" : "offline";
+    mqttPublish(mqttTopic("device/custom/%1").arg(m_names ? device->name() : device->id()), {{"status", status}}, true);
+    logInfo << device << "is" << status;
 }
 
 void Controller::quit(void)
@@ -57,6 +64,8 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
     {
         if (json.value("status").toString() != "online")
         {
+            m_status = false;
+
             for (int i = 0; i < m_devices.count(); i++)
                 mqttUnsubscribe(mqttTopic("td/custom/%1").arg(m_names ? m_devices.at(i)->name() : m_devices.at(i)->id()));
 
@@ -69,6 +78,7 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
     {
         QJsonArray devices = json.value("devices").toArray();
 
+        m_status = true;
         m_names = json.value("names").toBool();
 
         for (int i = 0; i < m_devices.count(); i++)
@@ -89,6 +99,7 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
 
                 if (m_names && name != device->name())
                 {
+                    mqttPublish(mqttTopic("device/custom/%1").arg(device->name()), QJsonObject(), true);
                     mqttUnsubscribe(mqttTopic("td/custom/%1").arg(device->name()));
                     device->setName(name);
                 }
@@ -107,6 +118,8 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
                 mqttPublish(mqttTopic("command/custom"), QJsonObject {{"action", "updateDevice"}, {"data", QJsonObject {{"real", true}, {"active", true}, {"cloud", false}, {"discovery", false}, {"id", device->id()}, {"service", QCoreApplication::applicationName()}, {"exposes", device->exposes()}, {"options", device->options()}}}});
                 device->setPublished();
             }
+
+            publishAvailability(device.data());
         }
     }
     else if (subTopic.startsWith("td/custom/"))
@@ -128,16 +141,16 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
     }
 }
 
-void Controller::availabilityUpdated(Availability availability)
+void Controller::availabilityUpdated(void)
 {
-    DeviceObject *device = reinterpret_cast <DeviceObject*> (sender());
-    QString status = availability == Availability::Online ? "online" : "offline";
-    mqttPublish(mqttTopic("device/custom/%1").arg(m_names ? device->name() : device->id()), {{"status", status}}, true);
-    logInfo << device << "is" << status;
+    if (!m_status)
+        return;
+
+    publishAvailability(reinterpret_cast <DeviceObject*> (sender()));
 }
 
-void Controller::propertiesUpdated(const QMap <QString, QVariant> &properties)
+void Controller::propertiesUpdated(void)
 {
     DeviceObject *device = reinterpret_cast <DeviceObject*> (sender());
-    mqttPublish(mqttTopic("fd/custom/%1").arg(m_names ? device->name() : device->id()), QJsonObject::fromVariantMap(properties));
+    mqttPublish(mqttTopic("fd/custom/%1").arg(m_names ? device->name() : device->id()), QJsonObject::fromVariantMap(device->properties()));
 }

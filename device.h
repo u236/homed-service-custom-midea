@@ -58,11 +58,14 @@ public:
     inline QString name(void) { return m_name; }
     inline void setName(const QString &value) { m_name = value; }
 
+    inline Availability availability(void) { return m_availability; }
+
     inline bool published(void) { return m_published; }
     inline void setPublished(void) { m_published = true; }
 
     inline QJsonArray exposes(void) { return m_exposes; }
     inline QJsonObject options(void) { return m_options; }
+    inline QMap <QString, QVariant> properties(void) { return m_properties; }
 
     void init(void);
 
@@ -120,8 +123,8 @@ private slots:
 
 signals:
 
-    void availabilityUpdated(Availability availability);
-    void propertiesUpdated(const QMap <QString, QVariant> &properties);
+    void availabilityUpdated(void);
+    void propertiesUpdated(void);
 
 };
 
