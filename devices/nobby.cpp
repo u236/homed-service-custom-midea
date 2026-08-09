@@ -4,12 +4,15 @@ NobbyBalance::NobbyBalance(const QString &port, const QString &id, bool debug) :
 {
     m_exposes = {"switch", "heater", "flame", "mode", "waterTemperature", "waterTargetTemperature", "heaterTemperature", "heaterTargetTemperature", "pressure", "errorCode"};
 
-    m_options.insert("heater",                  QJsonObject {{"type", "toggle"}});
-    m_options.insert("waterTemperature",        QJsonObject {{"type", "sensor"}, {"unit", "°C"}});
-    m_options.insert("waterTargetTemperature",  QJsonObject {{"type", "number"}, {"min", 35}, {"max", 60}, {"unit", "°C"}});
+    m_options.insert("heater",                  QJsonObject {{"type", "toggle"}, {"icon", "radiator"}});
+    m_options.insert("flame",                   QJsonObject {{"type", "sensor"}, {"icon", "mdi:fire"}});
+    m_options.insert("mode",                    QJsonObject {{"type", "sensor"}, {"icon", "mdi:water-boiler"}});
+    m_options.insert("waterTemperature",        QJsonObject {{"type", "sensor"}, {"unit", "°C"}, {"icon", "mdi:water-thermometer"}});
+    m_options.insert("waterTargetTemperature",  QJsonObject {{"type", "number"}, {"min", 35}, {"max", 60}, {"unit", "°C"}, {"icon", "mdi:water-thermometer"}});
     m_options.insert("heaterTemperature",       QJsonObject {{"type", "sensor"}, {"unit", "°C"}});
     m_options.insert("heaterTargetTemperature", QJsonObject {{"type", "number"}, {"min", 30}, {"max", 80}, {"unit", "°C"}});
     m_options.insert("pressure",                QJsonObject {{"type", "sensor"}, {"unit", "bar"}});
+    m_options.insert("errorCode",               QJsonObject {{"type", "sensor"}, {"icon", "alert-circle-outline"}});
 
     m_actions = {"status", "heater", "heaterTargetTemperature", "waterTargetTemperature"};
 }
