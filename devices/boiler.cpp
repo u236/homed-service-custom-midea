@@ -1,6 +1,6 @@
-#include "nobby.h"
+#include "boiler.h"
 
-NobbyBalance::NobbyBalance(const QString &port, const QString &id, bool debug) : DeviceObject(0xE6, port, id, debug)
+Boiler::Boiler(const QString &port, const QString &id, bool debug) : DeviceObject(0xE6, port, id, debug)
 {
     m_exposes = {"switch", "heater", "flame", "mode", "waterTemperature", "waterTargetTemperature", "heaterTemperature", "heaterTargetTemperature", "pressure", "errorCode"};
 
@@ -17,7 +17,7 @@ NobbyBalance::NobbyBalance(const QString &port, const QString &id, bool debug) :
     m_actions = {"status", "heater", "heaterTargetTemperature", "waterTargetTemperature"};
 }
 
-void NobbyBalance::action(const QString &name, const QVariant &data)
+void Boiler::action(const QString &name, const QVariant &data)
 {
     quint8 buffer[30];
     QByteArray payload;
@@ -73,7 +73,7 @@ void NobbyBalance::action(const QString &name, const QVariant &data)
     sendFrame(FRAME_SET, payload.append(static_cast <char> (crc(payload))));
 }
 
-void NobbyBalance::parseFrame(quint8 type, const QByteArray &payload)
+void Boiler::parseFrame(quint8 type, const QByteArray &payload)
 {
     switch (type)
     {
@@ -117,7 +117,7 @@ void NobbyBalance::parseFrame(quint8 type, const QByteArray &payload)
     }
 }
 
-void NobbyBalance::ping(void)
+void Boiler::ping(void)
 {
     quint8 buffer[30];
     QByteArray payload;

@@ -1,14 +1,14 @@
-#ifndef NOBBY_H
-#define NOBBY_H
+#ifndef BOILER_H
+#define BOILER_H
 
 #include "device.h"
 
-class NobbyBalance : public DeviceObject
+class Boiler : public DeviceObject
 {
 
 public:
 
-    NobbyBalance(const QString &port, const QString &id, bool debug);
+    Boiler(const QString &port, const QString &id, bool debug);
     void action(const QString &name, const QVariant &data) override;
 
 private:

@@ -3,11 +3,11 @@ include(../homed-common/homed-common.pri)
 HEADERS += \
     controller.h \
     device.h \
-    devices/nobby.h
+    devices/boiler.h
 
 SOURCES += \
     controller.cpp \
     device.cpp \
-    devices/nobby.cpp
+    devices/boiler.cpp
 
 QT += serialport

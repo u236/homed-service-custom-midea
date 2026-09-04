@@ -1,10 +1,10 @@
-#include "devices/nobby.h"
+#include "devices/boiler.h"
 #include "controller.h"
 #include "logger.h"
 
 Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, configFile), m_status(false), m_names(false)
 {
-    QList <QString> names = getConfig()->childGroups(), types = {"nobbyBalance"};
+    QList <QString> names = getConfig()->childGroups(), types = {"boiler"};
 
     for (int i = 0; i < names.count(); i++)
     {
@@ -21,7 +21,7 @@ Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, confi
 
             switch (types.indexOf(getConfig()->value(QString("%1/type").arg(name)).toString()))
             {
-                case 0:  device = Device(new NobbyBalance(port, QString("midea-%1").arg(name), debug)); break;
+                case 0:  device = Device(new Boiler(port, QString("midea-%1").arg(name), debug)); break;
                 default: continue;
             }
 
