@@ -19,6 +19,7 @@ private:
     bool m_status, m_names;
     QList <Device> m_devices;
 
+    void publishDevice(DeviceObject *device);
     void publishAvailability(DeviceObject *device);
 
 public slots:
@@ -30,6 +31,7 @@ private slots:
     void mqttConnected(void) override;
     void mqttReceived(const QByteArray &message, const QMqttTopicName &topic) override;
 
+    void deviceUpdated(void);
     void availabilityUpdated(void);
     void propertiesUpdated(void);
 

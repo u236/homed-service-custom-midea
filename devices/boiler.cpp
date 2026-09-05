@@ -2,8 +2,6 @@
 
 Boiler::Boiler(const QString &port, const QString &id, bool debug) : DeviceObject(0xE6, port, id, debug)
 {
-    m_exposes = {"switch", "heater", "flame", "mode", "waterTemperature", "waterTargetTemperature", "heaterTemperature", "heaterTargetTemperature", "pressure", "errorCode"};
-
     m_options.insert("heater",                  QJsonObject {{"type", "toggle"}, {"icon", "radiator"}});
     m_options.insert("flame",                   QJsonObject {{"type", "binary"}, {"icon", "mdi:fire"}});
     m_options.insert("mode",                    QJsonObject {{"type", "sensor"}, {"icon", "mdi:water-boiler"}});
@@ -14,7 +12,10 @@ Boiler::Boiler(const QString &port, const QString &id, bool debug) : DeviceObjec
     m_options.insert("pressure",                QJsonObject {{"type", "sensor"}, {"unit", "bar"}});
     m_options.insert("errorCode",               QJsonObject {{"type", "sensor"}, {"icon", "alert-circle-outline"}});
 
+    m_exposes = {"switch", "heater", "flame", "mode", "waterTemperature", "waterTargetTemperature", "heaterTemperature", "heaterTargetTemperature", "pressure", "errorCode"};
     m_actions = {"status", "heater", "heaterTargetTemperature", "waterTargetTemperature"};
+
+    m_ready = true;
 }
 
 void Boiler::action(const QString &name, const QVariant &data)

@@ -58,6 +58,7 @@ public:
     inline QString name(void) { return m_name; }
     inline void setName(const QString &value) { m_name = value; }
 
+    inline bool ready(void) { return m_ready; }
     inline Availability availability(void) { return m_availability; }
 
     inline bool published(void) { return m_published; }
@@ -74,7 +75,7 @@ protected:
     quint8 m_appliance, m_protocol;
 
     QString m_id, m_name;
-    bool m_debug, m_published;
+    bool m_debug;
 
     QTimer *m_receiveTimer, *m_resetTimer, *m_updateTimer;
 
@@ -89,6 +90,7 @@ protected:
     bool m_connected;
 
     QByteArray m_buffer;
+    bool m_ready, m_published;
 
     Availability m_availability;
     qint64 m_lastSeen;
@@ -123,6 +125,7 @@ private slots:
 
 signals:
 
+    void deviceUpdated(void);
     void availabilityUpdated(void);
     void propertiesUpdated(void);
 
