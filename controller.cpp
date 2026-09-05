@@ -1,10 +1,11 @@
 #include "devices/boiler.h"
+#include "devices/conditioner.h"
 #include "controller.h"
 #include "logger.h"
 
 Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, configFile), m_status(false), m_names(false)
 {
-    QList <QString> names = getConfig()->childGroups(), types = {"boiler"};
+    QList <QString> names = getConfig()->childGroups(), types = {"conditioner", "boiler"};
 
     for (int i = 0; i < names.count(); i++)
     {
@@ -12,17 +13,21 @@ Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, confi
 
         if (name != "log" && name != "mqtt")
         {
-            QString port = getConfig()->value(QString("%1/port").arg(name), "/dev/ttyUSB0").toString();
+            QString port = getConfig()->value(QString("%1/port").arg(name), "/dev/ttyUSB0").toString(), type = getConfig()->value(QString("%1/type").arg(name)).toString();
             bool debug = getConfig()->value(QString("%1/debug").arg(name), false).toBool();
             Device device;
 
             if (port.isEmpty())
                 continue;
 
-            switch (types.indexOf(getConfig()->value(QString("%1/type").arg(name)).toString()))
+            switch (types.indexOf(type))
             {
-                case 0:  device = Device(new Boiler(port, QString("midea-%1").arg(name), debug)); break;
-                default: continue;
+                case 0: device = Device(new Conditioner(port, QString("midea-%1").arg(name), debug)); break;
+                case 1: device = Device(new Boiler(port, QString("midea-%1").arg(name), debug)); break;
+
+                default:
+                    logWarning << "Device type" << type << "unrecognized";
+                    continue;
             }
 
             connect(device.data(), &DeviceObject::deviceUpdated, this, &Controller::deviceUpdated);
