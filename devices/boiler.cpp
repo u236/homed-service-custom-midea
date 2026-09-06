@@ -74,48 +74,38 @@ void Boiler::action(const QString &name, const QVariant &data)
     sendFrame(FRAME_SET, payload.append(static_cast <char> (crc(payload))));
 }
 
-void Boiler::parseFrame(quint8 type, const QByteArray &payload)
+void Boiler::parseFrame(const QByteArray &payload)
 {
-    switch (type)
+    QMap <QString, QVariant> properties;
+
+    if (payload.length() != 37)
+        return;
+
+    properties.insert("status", payload.at(2) & 0x04 ? "on" : "off");
+    properties.insert("heater", payload.at(4) & 0x01 ? true : false);
+    properties.insert("flame", payload.at(2) & 0x08 ? true : false);
+
+    switch (payload.at(2) >> 4 & 0x03)
     {
-        case FRAME_SET:
-        case FRAME_GET:
-        case FRAME_NOTIFY:
-        {
-            QMap <QString, QVariant> properties;
-
-            if (payload.length() != 37)
-                return;
-
-            properties.insert("status", payload.at(2) & 0x04 ? "on" : "off");
-            properties.insert("heater", payload.at(4) & 0x01 ? true : false);
-            properties.insert("flame", payload.at(2) & 0x08 ? true : false);
-
-            switch (payload.at(2) >> 4 & 0x03)
-            {
-                case 0x00: properties.insert("mode", "idle"); break;
-                case 0x01: properties.insert("mode", "heater"); break;
-                case 0x02: properties.insert("mode", "water"); break;
-            }
-
-            properties.insert("waterTemperature", static_cast <quint8> (payload.at(8)));
-            properties.insert("waterTargetTemperature", static_cast <quint8> (payload.at(12)));
-
-            properties.insert("heaterTemperature", static_cast <quint8> (payload.at(14)));
-            properties.insert("heaterTargetTemperature", static_cast <quint8> (payload.at(17)));
-
-            properties.insert("pressure", static_cast <quint8> (payload.at(27)) / 10.0);
-            properties.insert("errorCode", static_cast <quint8> (payload.at(6))); // not equals error codes on display
-
-            if (m_properties != properties)
-            {
-                m_properties = properties;
-                emit propertiesUpdated();
-            }
-
-            break;
-        }
+        case 0x00: properties.insert("mode", "idle"); break;
+        case 0x01: properties.insert("mode", "heater"); break;
+        case 0x02: properties.insert("mode", "water"); break;
     }
+
+    properties.insert("waterTemperature", static_cast <quint8> (payload.at(8)));
+    properties.insert("waterTargetTemperature", static_cast <quint8> (payload.at(12)));
+
+    properties.insert("heaterTemperature", static_cast <quint8> (payload.at(14)));
+    properties.insert("heaterTargetTemperature", static_cast <quint8> (payload.at(17)));
+
+    properties.insert("pressure", static_cast <quint8> (payload.at(27)) / 10.0);
+    properties.insert("errorCode", static_cast <quint8> (payload.at(6))); // not equals error codes on display
+
+    if (m_properties == properties)
+        return;
+
+    m_properties = properties;
+    emit propertiesUpdated();
 }
 
 void Boiler::ping(void)

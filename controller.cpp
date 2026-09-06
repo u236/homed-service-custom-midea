@@ -5,7 +5,7 @@
 
 Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, configFile), m_status(false), m_names(false)
 {
-    QList <QString> names = getConfig()->childGroups(), types = {"conditioner", "boiler"};
+    QList <QString> names = getConfig()->childGroups(), types = {"boiler", "conditioner"};
 
     for (int i = 0; i < names.count(); i++)
     {
@@ -22,8 +22,8 @@ Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, confi
 
             switch (types.indexOf(type))
             {
-                case 0: device = Device(new Conditioner(port, QString("midea-%1").arg(name), debug)); break;
-                case 1: device = Device(new Boiler(port, QString("midea-%1").arg(name), debug)); break;
+                case 0: device = Device(new Boiler(port, QString("midea-%1").arg(name), debug)); break;
+                case 1: device = Device(new Conditioner(port, QString("midea-%1").arg(name), debug)); break;
 
                 default:
                     logWarning << "Device type" << type << "unrecognized";

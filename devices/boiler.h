@@ -13,7 +13,7 @@ public:
 
 private:
 
-    void parseFrame(quint8 type, const QByteArray &payload) override;
+    void parseFrame(const QByteArray &payload) override;
     void ping(void) override;
 
 };

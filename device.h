@@ -29,6 +29,8 @@ enum class Availability
     Offline
 };
 
+#pragma pack(push, 1)
+
 struct headerStruct
 {
     quint8 startByte;
@@ -38,6 +40,8 @@ struct headerStruct
     quint8 protocol;
     quint8 type;
 };
+
+#pragma pack(pop)
 
 class DeviceObject;
 typedef QSharedPointer <DeviceObject> Device;
@@ -101,7 +105,7 @@ protected:
     QList <QString> m_actions;
     QMap <QString, QVariant> m_properties;
 
-    virtual void parseFrame(quint8 type, const QByteArray &payload) = 0;
+    virtual void parseFrame(const QByteArray &payload) = 0;
     virtual void ping(void) = 0;
 
     quint8 checksum(const QByteArray &data);

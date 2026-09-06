@@ -226,17 +226,19 @@ void DeviceObject::readyRead(void)
 
         switch (header->type)
         {
+            case FRAME_SET:
+            case FRAME_GET:
+            case FRAME_NOTIFY:
+            {
+                parseFrame(m_buffer.mid(offset + sizeof(headerStruct), header->length - sizeof(headerStruct)));
+                break;
+            }
+
             case FRAME_NETWORK_QUERY:
             {
                 quint8 data[20] = {0x01, 0x01, 0x04, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
                 QByteArray payload = QByteArray(reinterpret_cast <char*> (data), sizeof(data));
                 sendFrame(FRAME_NETWORK_QUERY, payload.append(static_cast <char> (crc(payload))));
-                break;
-            }
-
-            default:
-            {
-                parseFrame(header->type, m_buffer.mid(offset + sizeof(headerStruct), header->length - sizeof(headerStruct)));
                 break;
             }
         }
