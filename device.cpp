@@ -22,7 +22,7 @@ static uint8_t const crcTable[256] =
     0x74, 0x2A, 0xC8, 0x96, 0x15, 0x4B, 0xA9, 0xF7, 0xB6, 0xE8, 0x0A, 0x54, 0xD7, 0x89, 0x6B, 0x35
 };
 
-DeviceObject::DeviceObject(quint8 appliance, const QString &port, const QString &id, bool debug) : QObject(nullptr), m_appliance(appliance), m_protocol(0), m_id(id), m_name(id), m_debug(debug), m_receiveTimer(new QTimer(this)), m_resetTimer(new QTimer(this)), m_updateTimer(new QTimer(this)), m_serial(new QSerialPort(this)), m_socket(new QTcpSocket(this)), m_serialError(false), m_connected(false), m_ready(false), m_published(false), m_availability(Availability::Unknown), m_lastSeen(QDateTime::currentMSecsSinceEpoch())
+DeviceObject::DeviceObject(quint8 appliance, const QString &port, const QString &id, bool debug) : QObject(nullptr), m_appliance(appliance), m_protocol(0), m_id(id), m_name(id), m_debug(debug), m_receiveTimer(new QTimer(this)), m_resetTimer(new QTimer(this)), m_updateTimer(new QTimer(this)), m_serial(new QSerialPort(this)), m_socket(new QTcpSocket(this)), m_connected(false), m_ready(false), m_published(false), m_availability(Availability::Unknown), m_lastSeen(QDateTime::currentMSecsSinceEpoch())
 {
     if (!port.startsWith("tcp://"))
     {
@@ -147,16 +147,14 @@ void DeviceObject::sendFrame(quint8 type, const QByteArray &payload)
 void DeviceObject::serialError(QSerialPort::SerialPortError error)
 {
     if (error == QSerialPort::SerialPortError::NoError)
-    {
-        m_serialError = false;
         return;
-    }
 
-    if (!m_serialError)
-        logWarning << this << "serial port error:" << error;
+    logWarning << this << "serial port error:" << error;
+
+    if (m_serial->isOpen())
+        m_serial->close();
 
     m_resetTimer->start(RESET_TIMEOUT);
-    m_serialError = true;
 }
 
 void DeviceObject::socketError(QTcpSocket::SocketError error)
