@@ -58,18 +58,19 @@ public:
     virtual void action(const QString &name, const QVariant &data) = 0;
 
     inline QString id(void) { return m_id; }
-
-    inline QString name(void) { return m_name; }
-    inline void setName(const QString &value) { m_name = value; }
-
+    inline QString name(void) { return m_data.value("name").toString(m_id); }
     inline bool ready(void) { return m_ready; }
-    inline Availability availability(void) { return m_availability; }
 
     inline bool published(void) { return m_published; }
-    inline void setPublished(void) { m_published = true; }
+    inline void setPublished(bool value) { m_published = value; }
 
+    inline Availability availability(void) { return m_availability; }
     inline QJsonArray exposes(void) { return m_exposes; }
     inline QJsonObject options(void) { return m_options; }
+
+    inline QJsonObject data(void) { return m_data; }
+    inline void setData(const QJsonObject &value) { m_data = value; }
+
     inline QMap <QString, QVariant> properties(void) { return m_properties; }
 
     void init(void);
@@ -78,7 +79,7 @@ protected:
 
     quint8 m_appliance, m_protocol;
 
-    QString m_id, m_name;
+    QString m_id;
     bool m_debug;
 
     QTimer *m_receiveTimer, *m_resetTimer, *m_updateTimer;
@@ -98,7 +99,7 @@ protected:
     qint64 m_lastSeen;
 
     QJsonArray m_exposes;
-    QJsonObject m_options;
+    QJsonObject m_options, m_data;
 
     QList <QString> m_actions;
     QMap <QString, QVariant> m_properties;

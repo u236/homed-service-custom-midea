@@ -52,8 +52,16 @@ Controller::Controller(const QString &configFile) : HOMEd(SERVICE_VERSION, confi
 
 void Controller::publishDevice(DeviceObject *device)
 {
-    mqttPublish(mqttTopic("command/%1").arg(m_topic), QJsonObject {{"action", "updateDevice"}, {"data", QJsonObject {{"real", true}, {"active", true}, {"cloud", false}, {"discovery", false}, {"id", device->id()}, {"service", QCoreApplication::applicationName()}, {"exposes", device->exposes()}, {"options", device->options()}}}});
-    device->setPublished();
+    QJsonObject data = device->data().isEmpty() ? QJsonObject {{"active", true}, {"cloud", false}, {"discovery", false}} : device->data();
+
+    data.insert("id", device->id());
+    data.insert("service", QCoreApplication::applicationName());
+    data.insert("exposes", device->exposes());
+    data.insert("options", device->options());
+    data.insert("real", true);
+
+    mqttPublish(mqttTopic("command/%1").arg(m_topic), {{"action", "updateDevice"}, {"device", device->id()}, {"data", data}});
+    device->setPublished(true);
 }
 
 void Controller::publishAvailability(DeviceObject *device)
@@ -89,7 +97,10 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
             m_status = false;
 
             for (int i = 0; i < m_devices.count(); i++)
+            {
                 mqttUnsubscribe(mqttTopic("td/%1/%2").arg(m_topic, m_names ? m_devices.at(i)->name() : m_devices.at(i)->id()));
+                m_devices.at(i)->setPublished(false);
+            }
 
             return;
         }
@@ -98,6 +109,7 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
     }
     else if (subTopic == QString("status/%1").arg(m_topic))
     {
+        QList <QString> list = {"id", "service", "exposes", "options", "real"};
         QJsonArray devices = json.value("devices").toArray();
 
         m_status = true;
@@ -106,39 +118,57 @@ void Controller::mqttReceived(const QByteArray &message, const QMqttTopicName &t
         for (int i = 0; i < m_devices.count(); i++)
         {
             const Device &device = m_devices.at(i);
-            bool check = true;
 
             for (auto it = devices.begin(); it != devices.end(); it++)
             {
                 QJsonObject item = it->toObject();
-                QString name = item.value("name").toString();
 
                 if (item.value("id").toString() != device->id())
                     continue;
 
-                if (name.isEmpty())
-                    name = device->id();
+                for (int j = 0; j < list.count(); j++)
+                    item.remove(list.at(j));
 
-                if (m_names && name != device->name())
+                if (m_names && item.value("name").toString(device->id()) != device->name())
                 {
                     mqttPublish(mqttTopic("device/%1/%2").arg(m_topic, device->name()), QJsonObject(), true);
                     mqttUnsubscribe(mqttTopic("td/%1/%2").arg(m_topic, device->name()));
-                    device->setName(name);
                 }
 
-                check = false;
+                device->setData(item);
                 break;
             }
 
             mqttSubscribe(mqttTopic("td/%1/%2").arg(m_topic, m_names ? device->name() : device->id()));
 
-            if (!check)
-                device->setPublished();
-
             if (device->ready() && !device->published())
                 publishDevice(device.data());
 
             publishAvailability(device.data());
+        }
+
+        for (auto it = devices.begin(); it != devices.end(); it++)
+        {
+            QJsonObject item = it->toObject();
+            QString id = item.value("id").toString();
+            bool check = true;
+
+            if (item.value("service").toString() != QCoreApplication::applicationName())
+                continue;
+
+            for (int i = 0; i < m_devices.count(); i++)
+            {
+                if (m_devices.at(i)->id() != id)
+                    continue;
+
+                check = false;
+                break;
+            }
+
+            if (!check)
+                continue;
+
+            mqttPublish(mqttTopic("command/%1").arg(m_topic), QJsonObject {{"action", "removeDevice"}, {"device", id}});
         }
     }
     else if (subTopic.startsWith(QString("td/%1/").arg(m_topic)))
