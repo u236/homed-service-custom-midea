@@ -66,9 +66,7 @@ void Controller::publishDevice(DeviceObject *device)
 
 void Controller::publishAvailability(DeviceObject *device)
 {
-    QString status = device->availability() == Availability::Online ? "online" : "offline";
-    mqttPublish(mqttTopic("device/%1/%2").arg(m_topic, m_names ? device->name() : device->id()), {{"status", status}}, true);
-    logInfo << device << "is" << status;
+    mqttPublish(mqttTopic("device/%1/%2").arg(m_topic, m_names ? device->name() : device->id()), {{"status", device->availability() == Availability::Online ? "online" : "offline"}}, true);
 }
 
 void Controller::quit(void)
@@ -202,10 +200,14 @@ void Controller::deviceUpdated(void)
 
 void Controller::availabilityUpdated(void)
 {
+    DeviceObject *device = reinterpret_cast <DeviceObject*> (sender());
+
+    logInfo << device << "is" << (device->availability() == Availability::Online ? "online" : "offline");
+
     if (!m_status)
         return;
 
-    publishAvailability(reinterpret_cast <DeviceObject*> (sender()));
+    publishAvailability(device);
 }
 
 void Controller::propertiesUpdated(void)
