@@ -46,6 +46,7 @@ DeviceObject::DeviceObject(quint8 appliance, const QString &port, const QString 
 
         connect(m_socket, &QTcpSocket::errorOccurred, this, &DeviceObject::socketError);
         connect(m_socket, &QTcpSocket::connected, this, &DeviceObject::socketConnected);
+        connect(m_socket, &QTcpSocket::disconnected, this, &DeviceObject::socketDisconnected);
     }
 
     connect(m_device, &QIODevice::readyRead, this, &DeviceObject::startTimer);
@@ -86,8 +87,11 @@ void DeviceObject::init(void)
             return;
         }
 
-        if (m_connected)
-            m_socket->disconnectFromHost();
+        if (m_socket->state() != QAbstractSocket::UnconnectedState)
+        {
+            m_socket->abort();
+            m_connected = false;
+        }
 
         m_socket->connectToHost(m_adddress, m_port);
     }
@@ -126,6 +130,9 @@ void DeviceObject::sendFrame(quint8 type, const QByteArray &payload)
 {
     headerStruct header;
     QByteArray data;
+
+    if (m_device == m_socket && !m_connected)
+        return;
 
     memset(&header, 0, sizeof(header));
 
@@ -176,8 +183,17 @@ void DeviceObject::socketConnected(void)
     setsockopt(descriptor, SOL_TCP, TCP_USER_TIMEOUT, &timeout, sizeof(timeout));
 
     logInfo << this << "successfully connected to" << QString("%1:%2").arg(m_adddress.toString()).arg(m_port);
+    m_resetTimer->stop();
     m_socket->readAll();
     m_connected = true;
+}
+
+void DeviceObject::socketDisconnected(void)
+{
+    logWarning << this << "disconnected";
+    updateAvailability(Availability::Offline);
+    m_resetTimer->start(RESET_TIMEOUT);
+    m_connected = false;
 }
 
 void DeviceObject::startTimer(void)
