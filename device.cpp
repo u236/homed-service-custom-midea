@@ -153,7 +153,9 @@ void DeviceObject::sendFrame(quint8 type, const QByteArray &payload)
 
 void DeviceObject::serialError(QSerialPort::SerialPortError error)
 {
-    if (error == QSerialPort::SerialPortError::NoError)
+    QList <QSerialPort::SerialPortError> list = {QSerialPort::DeviceNotFoundError, QSerialPort::PermissionError, QSerialPort::WriteError, QSerialPort::ReadError, QSerialPort::ResourceError};
+
+    if (!list.contains(error))
         return;
 
     logWarning << this << "serial port error:" << error;
